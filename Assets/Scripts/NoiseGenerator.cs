@@ -8,11 +8,6 @@ public static class NoiseGenerator
   {
     float[,] noiseMap = new float[mapWidth, mapHeight];
 
-    if (scale <= 0)
-    {
-      scale = 0.00001f;
-    }
-
     float halfWidth = mapWidth / 2;
     float halfHeight = mapHeight / 2;
 
