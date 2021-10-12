@@ -4,7 +4,7 @@ using UnityEngine;
 
 public static class NoiseGenerator
 {
-  public static float[,] Generate(int mapWidth, int mapHeight, float scale, int octaves, float persistance, float lacunarity)
+  public static float[,] Generate(int mapWidth, int mapHeight, int seed, float scale, int octaves, float persistance, float lacunarity, Vector2 offset)
   {
     float[,] noiseMap = new float[mapWidth, mapHeight];
 
@@ -12,15 +12,18 @@ public static class NoiseGenerator
     {
       scale = 0.00001f;
     }
-    if (mapWidth <= 0)
-    {
-      mapWidth = 1;
-    }
-    if (mapHeight <= 0)
-    {
-      mapHeight = 1;
-    }
 
+    float halfWidth = mapWidth / 2;
+    float halfHeight = mapHeight / 2;
+
+    System.Random rnd = new System.Random(seed);
+    Vector2[] octaveOffsets = new Vector2[octaves];
+    for (int i = 0; i < octaves; i++)
+    {
+      float offsetX = rnd.Next(-100000, 100000) + offset.x;
+      float offsetY = rnd.Next(-100000, 100000) + offset.y;
+      octaveOffsets[i] = new Vector2(offsetX, offsetY);
+    }
     float minNoiseHeight = float.MaxValue;
     float maxNoiseHeight = float.MinValue;
 
@@ -34,8 +37,8 @@ public static class NoiseGenerator
         for (int octave = 0; octave < octaves; octave++)
         {
           // Multiply the frequency to make the samples more distant, so more "random"
-          float sampleX = x / scale * frequency;
-          float sampleY = y / scale * frequency;
+          float sampleX = (x - halfWidth) / scale * frequency + octaveOffsets[octave].x;
+          float sampleY = (y - halfHeight) / scale * frequency + octaveOffsets[octave].y;
           // * 2 - 1 to change the range [0,1] a [-1, 1]
           float perlinValue = Mathf.PerlinNoise(sampleX, sampleY) * 2 - 1;
           noiseHeight += perlinValue * amplitude;
