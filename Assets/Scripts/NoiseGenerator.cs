@@ -12,6 +12,15 @@ public static class NoiseGenerator
     {
       scale = 0.00001f;
     }
+    if (mapWidth <= 0)
+    {
+      mapWidth = 1;
+    }
+    if (mapHeight <= 0)
+    {
+      mapHeight = 1;
+    }
+
 
     for (int x = 0; x < mapWidth; x++)
     {

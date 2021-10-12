@@ -6,9 +6,9 @@ public class MapGenerator : MonoBehaviour
 {
   public int width = 256;
   public int height = 256;
-  public float scale = 1.0f;
+  public float scale = 8.0f;
 
-  public void Update()
+  public void Generate()
   {
     float[,] map = NoiseGenerator.Generate(width, height, scale);
 
