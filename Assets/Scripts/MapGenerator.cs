@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class MapGenerator : MonoBehaviour
 {
+  public enum DrawMode { NoiseMap, ColorMap };
+  public DrawMode drawMode;
   public int width = 256;
   public int height = 256;
   public float scale = 8.0f;
@@ -14,12 +16,37 @@ public class MapGenerator : MonoBehaviour
   public int seed = 1;
   public Vector2 offset;
 
+  public TerrainType[] regions;
+
   public void Generate()
   {
     float[,] map = NoiseGenerator.Generate(width, height, seed, scale, octaves, persistance, lacunarity, offset);
 
     MapDisplay mapDisplay = FindObjectOfType<MapDisplay>();
-    mapDisplay.Draw(map);
+    if (drawMode == DrawMode.NoiseMap)
+    {
+      mapDisplay.Draw(TextureGenerator.TextureFromHeightMap(map));
+    }
+    else if (drawMode == DrawMode.ColorMap)
+    {
+      Color[] colors = new Color[height * width];
+      for (int y = 0; y < height; y++)
+      {
+        for (int x = 0; x < width; x++)
+        {
+          foreach (TerrainType region in regions)
+          {
+            if (map[x, y] <= region.height)
+            {
+              colors[y * width + x] = region.color;
+              break;
+            }
+          }
+        }
+      }
+
+      mapDisplay.Draw(TextureGenerator.TextureFromColorMap(colors, width, height));
+    }
   }
 
   void OnValidate()
@@ -45,4 +72,12 @@ public class MapGenerator : MonoBehaviour
       octaves = 1;
     }
   }
+}
+
+[System.Serializable]
+public struct TerrainType
+{
+  public string name;
+  public float height;
+  public Color color;
 }
