@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class MapGenerator : MonoBehaviour
 {
-  public enum DrawMode { NoiseMap, ColorMap };
+  public enum DrawMode { NoiseMap, ColorMap, Mesh };
   public DrawMode drawMode;
   public int width = 256;
   public int height = 256;
@@ -15,8 +15,30 @@ public class MapGenerator : MonoBehaviour
   public float lacunarity = 2.0f;
   public int seed = 1;
   public Vector2 offset;
+  public float heightMultiplier;
+  public AnimationCurve meshHeightCurve;
 
   public TerrainType[] regions;
+
+  Texture2D GetColorsTexture2D(float[,] map)
+  {
+    Color[] colors = new Color[height * width];
+    for (int y = 0; y < height; y++)
+    {
+      for (int x = 0; x < width; x++)
+      {
+        foreach (TerrainType region in regions)
+        {
+          if (map[x, y] <= region.height)
+          {
+            colors[y * width + x] = region.color;
+            break;
+          }
+        }
+      }
+    }
+    return TextureGenerator.TextureFromColorMap(colors, width, height);
+  }
 
   public void Generate()
   {
@@ -29,23 +51,12 @@ public class MapGenerator : MonoBehaviour
     }
     else if (drawMode == DrawMode.ColorMap)
     {
-      Color[] colors = new Color[height * width];
-      for (int y = 0; y < height; y++)
-      {
-        for (int x = 0; x < width; x++)
-        {
-          foreach (TerrainType region in regions)
-          {
-            if (map[x, y] <= region.height)
-            {
-              colors[y * width + x] = region.color;
-              break;
-            }
-          }
-        }
-      }
 
-      mapDisplay.Draw(TextureGenerator.TextureFromColorMap(colors, width, height));
+      mapDisplay.Draw(GetColorsTexture2D(map));
+    }
+    else if (drawMode == DrawMode.Mesh)
+    {
+      mapDisplay.DrawMesh(MeshGenerator.GenerateTerrain(map, heightMultiplier, meshHeightCurve), GetColorsTexture2D(map));
     }
   }
 
