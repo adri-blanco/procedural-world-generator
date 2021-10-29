@@ -39,6 +39,66 @@ public static class MeshGenerator
 
     return meshData;
   }
+
+  public static MeshData GenerateVoxel(float[,] heightMap, float heightMultiplier, AnimationCurve meshHeightCurve, int maxVoxelHeight)
+  {
+    int width = heightMap.GetLength(0);
+    int height = heightMap.GetLength(1);
+    // To have the vertices centered in the screen. This var set the left corner
+    float topLeftX = (width - 1) / -2f;
+    // And this one, the top corner
+    float topLeftZ = (height - 1) / 2f;
+
+    MeshData meshData = new MeshData(width, height, true);
+    int vertexIndex = 0;
+    float padding = 0.5f;
+
+    for (int y = 0; y < height; y++)
+    {
+      for (int x = 0; x < width; x++)
+      {
+        float evaluatedHeight = meshHeightCurve.Evaluate(heightMap[x, y]) * heightMultiplier;
+        int pointHeight = NormalizeHeight(evaluatedHeight, heightMultiplier, maxVoxelHeight);
+        // top left vertice
+        meshData.vertices[vertexIndex] = new Vector3(topLeftX + x - padding, pointHeight, topLeftZ - y + padding);
+        meshData.uvs[vertexIndex] = new Vector2(x - padding / (float)width, y - padding / (float)height);
+        // top right vertice
+        meshData.vertices[vertexIndex + 1] = new Vector3(topLeftX + x + padding, pointHeight, topLeftZ - y + padding);
+        meshData.uvs[vertexIndex + 1] = new Vector2(x - padding / (float)width, y + padding / (float)height);
+        // bottom right vertice
+        meshData.vertices[vertexIndex + 2] = new Vector3(topLeftX + x + padding, pointHeight, topLeftZ - y - padding);
+        meshData.uvs[vertexIndex + 2] = new Vector2(x + padding / (float)width, y + padding / (float)height);
+        // bottom left vertice
+        meshData.vertices[vertexIndex + 3] = new Vector3(topLeftX + x - padding, pointHeight, topLeftZ - y - padding);
+        meshData.uvs[vertexIndex + 3] = new Vector2(x + padding / (float)width, y - padding / (float)height);
+
+        meshData.AddTriangle(vertexIndex, vertexIndex + 1, vertexIndex + 2);
+        meshData.AddTriangle(vertexIndex + 2, vertexIndex + 3, vertexIndex);
+        if (x != 0)
+        {
+          meshData.AddTriangle(vertexIndex, vertexIndex - 2, vertexIndex - 3);
+          meshData.AddTriangle(vertexIndex, vertexIndex + 3, vertexIndex - 2);
+        }
+
+        if (y != 0)
+        {
+          meshData.AddTriangle(vertexIndex, vertexIndex - (width * 4) + 3, vertexIndex - (width * 4) + 2);
+          meshData.AddTriangle(vertexIndex, vertexIndex - (width * 4) + 2, vertexIndex + 1);
+        }
+
+        vertexIndex += 4;
+      }
+    }
+
+    return meshData;
+
+  }
+
+  // Transform values betwean [0,1] * heightMultiplier to integers [0, maxVoxelHeight]
+  private static int NormalizeHeight(float height, float maxHeight, int maxVoxelHeight)
+  {
+    return (int)((height * maxVoxelHeight) / maxHeight);
+  }
 }
 
 public class MeshData
@@ -48,11 +108,20 @@ public class MeshData
   // Normal vectors to know which part of the texture is applied to each vertice
   public Vector2[] uvs;
   int triangleIndex;
-  public MeshData(int width, int height)
+  public MeshData(int width, int height, bool isVoxel = false)
   {
-    vertices = new Vector3[width * height];
-    uvs = new Vector2[width * height];
-    triangles = new int[(width - 1) * (height - 1) * 6];
+    int verticesLength = width * height;
+    int trianglesLength = (width - 1) * (height - 1) * 6;
+
+    if (isVoxel)
+    {
+      verticesLength *= 4;
+      trianglesLength = (width) * (height) * 18;
+    }
+
+    vertices = new Vector3[verticesLength];
+    uvs = new Vector2[verticesLength];
+    triangles = new int[trianglesLength];
   }
 
   public void AddTriangle(int a, int b, int c)
