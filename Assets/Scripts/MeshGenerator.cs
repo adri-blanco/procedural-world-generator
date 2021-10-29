@@ -40,7 +40,7 @@ public static class MeshGenerator
     return meshData;
   }
 
-  public static MeshData GenerateVoxel(float[,] heightMap, float heightMultiplier, AnimationCurve meshHeightCurve)
+  public static MeshData GenerateVoxel(float[,] heightMap, float heightMultiplier, AnimationCurve meshHeightCurve, int maxVoxelHeight)
   {
     int width = heightMap.GetLength(0);
     int height = heightMap.GetLength(1);
@@ -48,15 +48,6 @@ public static class MeshGenerator
     float topLeftX = (width - 1) / -2f;
     // And this one, the top corner
     float topLeftZ = (height - 1) / 2f;
-
-    float[,] evaluatedHeightMap = new float[width, height];
-    for (int y = 0; y < height; y++)
-    {
-      for (int x = 0; x < width; x++)
-      {
-        evaluatedHeightMap[x, y] = meshHeightCurve.Evaluate(heightMap[x, y]) * heightMultiplier;
-      }
-    }
 
     MeshData meshData = new MeshData(width, height, true);
     int vertexIndex = 0;
@@ -66,25 +57,36 @@ public static class MeshGenerator
     {
       for (int x = 0; x < width; x++)
       {
-        float pointHeight = evaluatedHeightMap[x, y];
+        float evaluatedHeight = meshHeightCurve.Evaluate(heightMap[x, y]) * heightMultiplier;
+        int pointHeight = NormalizeHeight(evaluatedHeight, heightMultiplier, maxVoxelHeight);
         // top left vertice
-        meshData.vertices[vertexIndex] = new Vector3(topLeftX + x - padding, pointHeight, topLeftZ - y - padding);
+        meshData.vertices[vertexIndex] = new Vector3(topLeftX + x - padding, pointHeight, topLeftZ - y + padding);
         meshData.uvs[vertexIndex] = new Vector2(x - padding / (float)width, y - padding / (float)height);
         // top right vertice
-        meshData.vertices[vertexIndex + 1] = new Vector3(topLeftX + x - padding, pointHeight, topLeftZ - y + padding);
+        meshData.vertices[vertexIndex + 1] = new Vector3(topLeftX + x + padding, pointHeight, topLeftZ - y + padding);
         meshData.uvs[vertexIndex + 1] = new Vector2(x - padding / (float)width, y + padding / (float)height);
         // bottom right vertice
-        meshData.vertices[vertexIndex + 2] = new Vector3(topLeftX + x + padding, pointHeight, topLeftZ - y + padding);
+        meshData.vertices[vertexIndex + 2] = new Vector3(topLeftX + x + padding, pointHeight, topLeftZ - y - padding);
         meshData.uvs[vertexIndex + 2] = new Vector2(x + padding / (float)width, y + padding / (float)height);
         // bottom left vertice
-        meshData.vertices[vertexIndex + 3] = new Vector3(topLeftX + x + padding, pointHeight, topLeftZ - y - padding);
+        meshData.vertices[vertexIndex + 3] = new Vector3(topLeftX + x - padding, pointHeight, topLeftZ - y - padding);
         meshData.uvs[vertexIndex + 3] = new Vector2(x + padding / (float)width, y - padding / (float)height);
 
         meshData.AddTriangle(vertexIndex, vertexIndex + 1, vertexIndex + 2);
         meshData.AddTriangle(vertexIndex + 2, vertexIndex + 3, vertexIndex);
+        if (x != 0)
+        {
+          meshData.AddTriangle(vertexIndex, vertexIndex - 2, vertexIndex - 3);
+          meshData.AddTriangle(vertexIndex, vertexIndex + 3, vertexIndex - 2);
+        }
+
+        if (y != 0)
+        {
+          meshData.AddTriangle(vertexIndex, vertexIndex - (width * 4) + 3, vertexIndex - (width * 4) + 2);
+          meshData.AddTriangle(vertexIndex, vertexIndex - (width * 4) + 2, vertexIndex + 1);
+        }
 
         vertexIndex += 4;
-
       }
     }
 
@@ -92,9 +94,10 @@ public static class MeshGenerator
 
   }
 
-  private static float NormalizeHeight(float height, int maxHeight)
+  // Transform values betwean [0,1] * heightMultiplier to integers [0, maxVoxelHeight]
+  private static int NormalizeHeight(float height, float maxHeight, int maxVoxelHeight)
   {
-    return 0;
+    return (int)((height * maxVoxelHeight) / maxHeight);
   }
 }
 
@@ -113,7 +116,7 @@ public class MeshData
     if (isVoxel)
     {
       verticesLength *= 4;
-      trianglesLength = (width) * (height) * 6;
+      trianglesLength = (width) * (height) * 18;
     }
 
     vertices = new Vector3[verticesLength];

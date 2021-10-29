@@ -17,6 +17,7 @@ public class MapGenerator : MonoBehaviour
   public Vector2 offset;
   public float heightMultiplier;
   public AnimationCurve meshHeightCurve;
+  public int maxVoxelHeight = 10;
 
   public TerrainType[] regions;
 
@@ -60,7 +61,7 @@ public class MapGenerator : MonoBehaviour
     }
     else if (drawMode == DrawMode.Voxel)
     {
-      mapDisplay.DrawMesh(MeshGenerator.GenerateVoxel(map, heightMultiplier, meshHeightCurve), GetColorsTexture2D(map));
+      mapDisplay.DrawMesh(MeshGenerator.GenerateVoxel(map, heightMultiplier, meshHeightCurve, maxVoxelHeight), GetColorsTexture2D(map));
     }
   }
 
