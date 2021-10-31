@@ -53,34 +53,43 @@ public static class MeshGenerator
     int vertexIndex = 0;
     float padding = 0.5f;
 
+    int[,] normalizedHeights = new int[width, height];
     for (int y = 0; y < height; y++)
     {
       for (int x = 0; x < width; x++)
       {
         float evaluatedHeight = meshHeightCurve.Evaluate(heightMap[x, y]) * heightMultiplier;
-        int pointHeight = NormalizeHeight(evaluatedHeight, heightMultiplier, maxVoxelHeight);
+        normalizedHeights[x, y] = NormalizeHeight(evaluatedHeight, heightMultiplier, maxVoxelHeight);
+      }
+    }
+
+    for (int y = 0; y < height; y++)
+    {
+      for (int x = 0; x < width; x++)
+      {
+        int pointHeight = normalizedHeights[x, y];
         // top left vertice
         meshData.vertices[vertexIndex] = new Vector3(topLeftX + x - padding, pointHeight, topLeftZ - y + padding);
-        meshData.uvs[vertexIndex] = new Vector2(x - padding / (float)width, y - padding / (float)height);
+        meshData.uvs[vertexIndex] = new Vector2((topLeftX + x - padding) / (float)width, (topLeftZ - y + padding) / (float)height);
         // top right vertice
         meshData.vertices[vertexIndex + 1] = new Vector3(topLeftX + x + padding, pointHeight, topLeftZ - y + padding);
-        meshData.uvs[vertexIndex + 1] = new Vector2(x - padding / (float)width, y + padding / (float)height);
+        meshData.uvs[vertexIndex + 1] = new Vector2((topLeftX + x + padding) / (float)width, (topLeftZ - y + padding) / (float)height);
         // bottom right vertice
         meshData.vertices[vertexIndex + 2] = new Vector3(topLeftX + x + padding, pointHeight, topLeftZ - y - padding);
-        meshData.uvs[vertexIndex + 2] = new Vector2(x + padding / (float)width, y + padding / (float)height);
+        meshData.uvs[vertexIndex + 2] = new Vector2((topLeftX + x + padding) / (float)width, (topLeftZ - y - padding) / (float)height);
         // bottom left vertice
         meshData.vertices[vertexIndex + 3] = new Vector3(topLeftX + x - padding, pointHeight, topLeftZ - y - padding);
-        meshData.uvs[vertexIndex + 3] = new Vector2(x + padding / (float)width, y - padding / (float)height);
+        meshData.uvs[vertexIndex + 3] = new Vector2((topLeftX + x - padding) / (float)width, (topLeftZ - y - padding) / (float)height);
 
         meshData.AddTriangle(vertexIndex, vertexIndex + 1, vertexIndex + 2);
         meshData.AddTriangle(vertexIndex + 2, vertexIndex + 3, vertexIndex);
-        if (x != 0)
+        if (x != 0 && normalizedHeights[x, y] != normalizedHeights[x - 1, y])
         {
           meshData.AddTriangle(vertexIndex, vertexIndex - 2, vertexIndex - 3);
           meshData.AddTriangle(vertexIndex, vertexIndex + 3, vertexIndex - 2);
         }
 
-        if (y != 0)
+        if (y != 0 && normalizedHeights[x, y] != normalizedHeights[x, y - 1])
         {
           meshData.AddTriangle(vertexIndex, vertexIndex - (width * 4) + 3, vertexIndex - (width * 4) + 2);
           meshData.AddTriangle(vertexIndex, vertexIndex - (width * 4) + 2, vertexIndex + 1);
