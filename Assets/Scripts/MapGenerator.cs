@@ -61,7 +61,7 @@ public class MapGenerator : MonoBehaviour
     }
     else if (drawMode == DrawMode.Voxel)
     {
-      mapDisplay.DrawMesh(MeshGenerator.GenerateVoxel(map, heightMultiplier, meshHeightCurve, maxVoxelHeight), GetColorsTexture2D(map));
+      mapDisplay.DrawVoxelMesh(MeshGenerator.GenerateVoxel(map, heightMultiplier, meshHeightCurve, maxVoxelHeight));
     }
   }
 

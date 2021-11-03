@@ -63,6 +63,12 @@ public static class MeshGenerator
       }
     }
 
+    int textureWidth = 64;
+    int textureHeight = 64;
+    int spriteSize = 16;
+    int selectionX = 4;
+    int selectionY = 1;
+
     for (int y = 0; y < height; y++)
     {
       for (int x = 0; x < width; x++)
@@ -70,16 +76,16 @@ public static class MeshGenerator
         int pointHeight = normalizedHeights[x, y];
         // top left vertice
         meshData.vertices[vertexIndex] = new Vector3(topLeftX + x - padding, pointHeight, topLeftZ - y + padding);
-        meshData.uvs[vertexIndex] = new Vector2((topLeftX + x - padding) / (float)width, (topLeftZ - y + padding) / (float)height);
+        meshData.uvs[vertexIndex + 3] = new Vector2((spriteSize * selectionX) / (float)textureWidth, (spriteSize * selectionY) / (float)textureHeight);
         // top right vertice
         meshData.vertices[vertexIndex + 1] = new Vector3(topLeftX + x + padding, pointHeight, topLeftZ - y + padding);
-        meshData.uvs[vertexIndex + 1] = new Vector2((topLeftX + x + padding) / (float)width, (topLeftZ - y + padding) / (float)height);
+        meshData.uvs[vertexIndex + 2] = new Vector2((spriteSize * selectionX - spriteSize) / (float)textureWidth, (spriteSize * selectionY) / (float)textureHeight);
         // bottom right vertice
         meshData.vertices[vertexIndex + 2] = new Vector3(topLeftX + x + padding, pointHeight, topLeftZ - y - padding);
-        meshData.uvs[vertexIndex + 2] = new Vector2((topLeftX + x + padding) / (float)width, (topLeftZ - y - padding) / (float)height);
+        meshData.uvs[vertexIndex + 1] = new Vector2((spriteSize * selectionX - spriteSize) / (float)textureWidth, (spriteSize * selectionY - spriteSize) / (float)textureHeight);
         // bottom left vertice
         meshData.vertices[vertexIndex + 3] = new Vector3(topLeftX + x - padding, pointHeight, topLeftZ - y - padding);
-        meshData.uvs[vertexIndex + 3] = new Vector2((topLeftX + x - padding) / (float)width, (topLeftZ - y - padding) / (float)height);
+        meshData.uvs[vertexIndex] = new Vector2((spriteSize * selectionX) / (float)textureWidth, (spriteSize * selectionY - spriteSize) / (float)textureHeight);
 
         meshData.AddTriangle(vertexIndex, vertexIndex + 1, vertexIndex + 2);
         meshData.AddTriangle(vertexIndex + 2, vertexIndex + 3, vertexIndex);
